@@ -266,11 +266,33 @@ sakila.address.address_id = sakila.Need_Address_Name.address_id
 
 -- 7h. List the top five genres in gross revenue in descending order. 
 -- (Hint: you may need to use the following tables: category, film_category, inventory, payment, and rental.)
-select * from sakila.category;
-select * from sakila.film_category;
-select * from sakila.inventory;
-select * from sakila.payment;
-select * from sakila.rental;
+create view Price_by_inventory_id as
+select sakila.rental.inventory_id, sum(sakila.payment.amount) as 'Inventory_id_sum'
+from sakila.rental
+inner join sakila. payment on
+sakila.rental.rental_id = sakila.payment.rental_id
+group by sakila.rental.inventory_id
+;
+create view Film_id_sumed as
+select sakila.inventory.film_id, sum(sakila.Price_by_inventory_id.Inventory_id_sum) as 'Film_id_sum'
+from sakila.inventory
+inner join sakila.Price_by_inventory_id on
+sakila.inventory.inventory_id = sakila.Price_by_inventory_id.inventory_id
+group by sakila.inventory.film_id
+;
+create view Cat_id_sumed as 
+select sakila.film_category.category_id, sum(sakila.Film_id_sumed.Film_id_sum) as 'Cat_id_sum'
+from sakila.film_category
+inner join sakila.Film_id_sumed on
+sakila.film_category.film_id = sakila.Film_id_sumed.film_id
+group by sakila.film_category.category_id
+;
+select sakila.category.name as 'Genre', sakila.Cat_id_sumed.Cat_id_sum as 'Revenue'
+from sakila.category
+inner join sakila.Cat_id_sumed on
+sakila.category.category_id = sakila.Cat_id_sumed.category_id
+order by sakila.Cat_id_sumed.Cat_id_sum DESC
+Limit 5
+;
 
-
-
+-- 
